@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   close="titlewindow1_closeHandler(event)" 
+			   width="250" height="350" xmlns:Model="com.board.Model.*">
+	<fx:Metadata>
+		[Event(name="getContentComplete", type="flash.events.Event")]
+		[Event(name="insertComplete", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			protected function titlewindow1_closeHandler(event:CloseEvent):void
+			{
+				visible = false;
+			}
+			
+			public function getContent(seq:int, bname:String):void
+			{
+				contentHTTP.send({bname:bname});
+			}
+			
+			protected function contentHTTP_resultHandler(event:ResultEvent):void
+			{
+				contentData.makeData(XML(event.result));
+				dispatchEvent(new Event("getContentComplete"));
+			}
+			
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				/*
+				writer 글쓴이
+				title 제목
+				content 내용
+				pwd 비밀번호
+				groups 그룹
+				step 스텝
+				level 레벨
+				bname 게시판이름
+				
+				seq 글번호
+				writer 글쓴이
+				title 제목
+				content 글내용
+				pwd 비밀번호
+				group 그룹
+				step 스텝
+				level 레벨
+				bname 게시판이름
+				*/
+				contentData.bname = bBname.text;
+				contentData.writer = bWriter.text;
+				contentData.title = bTitle.text;
+				contentData.content = bContent.text;
+				contentData.pwd = "password";
+				insertHTTP.send(contentData);
+			}
+			
+			protected function insertHTTP_resultHandler(event:ResultEvent):void
+			{
+				if(event.result == 'fail')
+				{
+					visible = false;
+					Alert.show('등록 실패');
+				}else
+				{
+					visible = false;
+					Alert.show("등록 성공");
+					dispatchEvent(new Event("insertComplete"));
+				}
+				
+			}
+			
+			protected function insertHTTP_faultHandler(event:FaultEvent):void
+			{
+				trace(event.message)
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<Model:ContentData id="contentData" />
+		
+		<s:HTTPService id="contentHTTP" 
+					   url="{ConfigData.CONTENT_URL}"
+					   resultFormat="e4x"
+					   result="contentHTTP_resultHandler(event)"
+					   method="POST"/>
+		<s:HTTPService id="insertHTTP" 
+					   url="{ConfigData.ADD_URL}"
+					   fault="insertHTTP_faultHandler(event)"
+					   resultFormat="e4x"
+					   result="insertHTTP_resultHandler(event)"
+					   method="POST"/>
+	</fx:Declarations>
+	
+	<s:HGroup>
+		<s:Label text="글쓴이" />
+		<s:TextInput id="bWriter" text="{contentData.writer}" />
+	</s:HGroup>
+	<s:HGroup>
+		<s:Label text="제목" />
+		<s:TextInput id="bTitle" text="{contentData.title}" />
+	</s:HGroup>
+	<s:HGroup>
+		<s:Label text="내용" />
+		<s:TextArea id="bContent" text="{contentData.content}"/>
+	</s:HGroup>
+	<s:HGroup>
+		<s:Label text="조회수" />
+		<s:TextInput id="bHit" text="{contentData.hit}"/>
+	</s:HGroup>
+	<s:HGroup>
+		<s:Label text="게시판" />
+		<s:TextInput id="bBname" text="{contentData.bname}"/>
+	</s:HGroup>
+	<s:HGroup>
+		<s:Label text="작성일" />
+		<s:TextInput id="bRegdate" text="{contentData.regdate}"/>
+	</s:HGroup>
+	
+	<s:HGroup>
+		<s:Button label="입력" click="button1_clickHandler(event)" />
+	</s:HGroup>
+</s:TitleWindow>
